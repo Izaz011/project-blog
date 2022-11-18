@@ -121,8 +121,11 @@ const deleteByQuery= async function(req,res){
         return res.status(500).send({ status: false, msg: error.message })
     }
 }
+<<<<<<< HEAD
    
 
+=======
+>>>>>>> e90eaf2f38b3fdecca87835cecbc2b51504087dd
 
 //============================================delete blog by path param ==========================================
 const deleteBlog = async function (req, res) {
