@@ -62,31 +62,67 @@ const createBlog = async function (req, res) {
 //======================================== delete query =======================================================
 
 const deleteByQuery= async function(req,res){
-    try
-       {  
-        const data=req.query 
-      const {category, authorId, tags, subcategory,isPublished}=data
-      if(Object.keys(data).length==0){
-       return res.status(400).send({status:false,msg:"no data is provided"})
-      }
-      if(isPublished=="true"){
-       return res.status(400).send({status:false,msg:"blog is published"})
-      }
+    try {
+        const data = req.query
+        const decodedToken = req.decodedToken
+        const { category, authorId, tags, subcategory, isPublished } = data
+        filterQuery = {isDeleted:false}
+        if (Object.keys(data).length == 0) {
+            return res.status(400).send({ status: false, msg: "no data is provided" })
+        }
+       if(isPublished){ 
+        if (isPublished === "true") {
+            return res.status(400).send({ status: false, msg: "blog is already published" })
+        }
+        else {
+            filterQuery.isPublished = isPublished
+        }
+    }
+        if (category) {
+            filterQuery.category = category
+        }
+        if (authorId) {
+            if (decodedToken.authorId == authorId) {
+                filterQuery.authorId = authorId
+            }
+            else {
+                return res.status(400).send({ status: false, msg: "token does not match" })
+            }
+        }
+        if (!authorId) {
+            const blogData = await blogModel.find(filterQuery)
+            for (let i = 0; i < blogData.length; i++) {
+                if (blogData[i].authorId == decodedToken.authorId) {
+                    filterQuery.authorId = blogData[i].authorId
+                    break;
+                    }
+                    else if(i==blogData.length-1){
+                        return res.status(400).send({ status: false, msg: "token does not match" })
+                    }
+                 }
+            }
+        if (tags) {
+            filterQuery.tags = tags
+        }
+        if (subcategory) {
+            filterQuery.subcategory = subcategory
+        }
+        const deletedBlogs = await blogModel.updateMany(
+            filterQuery,
+            {isDeleted:true,deletedAt:Date.now()}
+            )
+        if (deletedBlogs.modifiedCount== 0) {
+            return res.status(404).send({ status: false, msg: "blog not found" })
+        }
+
+        return res.status(200).send({ status: true, msg: deletedBlogs })
+    }
+    catch (error) {
+        return res.status(500).send({ status: false, msg: error.message })
+    }
+}
    
-      const deletedBlogs=await blogModel.updateMany(
-       data,
-      {isDeleted:true,deletedAt:new Date()},
-      {new:true}
-       )
-       if(deletedBlogs.modifiedCount == 0){
-           return res.status(404).send({status:false,msg:"blog not found"})
-       }
-       return res.status(200).send({status:true,msg:deletedBlogs})
-   }
-   catch(error){
-       return res.status(500).send({status:false,msg:error.message})
-   }
-   };
+
 
 //============================================delete blog by path param ==========================================
 const deleteBlog = async function (req, res) {
@@ -170,7 +206,7 @@ const getBlog = async function (req, res) {
         let { authorId, category, tags, subcategory } = req.query
         let filterQuery = { isDeleted: false, isPublished: true }
 
-        if (req.query.authorId) {
+        if (authorId) {
             if (!isValidObjectId(req.query.authorId)) {
                 return res.status(400).send({ status: false, msg: "Please enter valid author Id" })
             }
