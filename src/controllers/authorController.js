@@ -59,11 +59,7 @@ const login = async function (req, res) {
       if (email && password) {
           const author = await authorModel.findOne({ email: email, password: password })
           if (author) {
-<<<<<<< HEAD
-             const token = jwt.sign({ authorId: author._id.toString()},"BlogProject")
-=======
              const token = jwt.sign({ authorId: author._id.toString() },"BlogProject")
->>>>>>> e90eaf2f38b3fdecca87835cecbc2b51504087dd
               return res.status(200).send({ status: true, token: token })
           }
           else {

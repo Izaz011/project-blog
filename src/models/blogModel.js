@@ -6,8 +6,7 @@ const blogSchema = new mongoose.Schema(
         title: {
             type: String,
             trim: true,
-            required: "Title is required",
-            unique: true
+            required: "Title is required"
         },
         body: {
             type: String,
